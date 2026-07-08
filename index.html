@@ -434,7 +434,7 @@
       <div class="label">Time trained</div>
       <div class="value" id="completeDuration" style="font-size:22px;">00:00</div>
     </div>
-    <div class="backup-note">&#10003; Backup saved to your device</div>
+    <div class="backup-note" id="completeBackupNote">&#10003; Saved</div>
     <button class="nav-btn primary" style="max-width:220px; margin-top:6px;" id="btnBackHome">Back to dashboard</button>
   </div>
 
@@ -511,7 +511,7 @@
     <div id="emptyNote" class="empty-note" style="display:none;">No sessions logged yet. Finish a workout and it'll show up here.</div>
 
     <div class="section-label">Backup</div>
-    <p class="section-sub">A backup file downloads automatically every time you finish a workout. You can also grab one manually, or restore from an older one below.</p>
+    <p class="section-sub">Your history syncs to your account automatically. These buttons are just for an extra manual copy, or to move data between accounts.</p>
     <div class="backup-row">
       <button class="nav-btn" id="btnExportData">Export data</button>
       <button class="nav-btn" id="btnImportData">Import data</button>
@@ -616,7 +616,7 @@ const ICON_IMAGES = {"arnoldpress": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
 // serving a stale cached copy from the home screen icon. Your data lives
 // in this origin's storage regardless, so this never touches it.
 // ============================================================
-const APP_BUILD = '2026-07-08T21:39';
+const APP_BUILD = '2026-07-08T21:53';
 (function checkForUpdate(){
   fetch('version.json?t=' + Date.now(), {cache: 'no-store'})
     .then(res => res.ok ? res.json() : null)
@@ -1271,9 +1271,9 @@ document.getElementById('btnNext').addEventListener('click', async ()=>{
     stopTimer();
     const finalDuration = timerSeconds;
     await logSession(day.key, finalDuration);
-    exportData(); // auto-backup after every completed workout
     document.getElementById('completeSub').textContent = `${day.title} — ${day.exercises.length} exercises logged for ${new Date().toLocaleDateString(undefined,{month:'short', day:'numeric'})}.`;
     document.getElementById('completeDuration').textContent = formatClock(finalDuration);
+    document.getElementById('completeBackupNote').textContent = fbUser ? '✓ Synced to your account' : '✓ Saved';
     showScreen('screen-complete');
   }
 });
