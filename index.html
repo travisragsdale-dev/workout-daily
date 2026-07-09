@@ -68,6 +68,7 @@
   .auth-loading{ color:var(--text-faint); font-size:12px; text-align:center; margin-top:14px; font-family:var(--mono); }
   .screen{ display:none; flex-direction:column; flex:1; padding-bottom: calc(78px + var(--safe-bottom)); }
   #screen-session-detail{ padding-bottom: calc(20px + var(--safe-bottom)); }
+  #screen-preview{ padding-bottom: calc(20px + var(--safe-bottom)); }
   .screen.active{ display:flex; }
   ::-webkit-scrollbar{ display:none; }
 
@@ -211,6 +212,7 @@
   .modal-sheet h3{ font-family:var(--disp); font-size:24px; text-transform:uppercase; margin:0 0 8px; }
   .modal-sheet p{ color:var(--text-dim); font-size:14px; margin:0 0 20px; line-height:1.5; }
   .modal-row{ display:flex; gap:10px; }
+  .modal-row-3 .nav-btn{ padding:14px 6px; font-size:14px; }
 
   /* ---------- COMPLETE SCREEN ---------- */
   #screen-complete{ align-items:center; justify-content:center; text-align:center; padding:40px 30px; gap:16px; }
@@ -282,6 +284,15 @@
   .history-card .hc-chevron{ color:var(--text-faint); flex-shrink:0; }
 
   .session-detail-body{ flex:1; overflow-y:auto; padding: 10px 20px 20px; display:flex; flex-direction:column; gap:12px; }
+  .preview-list{ flex:1; overflow-y:auto; padding: 4px 20px 10px; display:flex; flex-direction:column; gap:10px; }
+  .preview-item{ display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:10px 14px; }
+  .preview-item .pi-thumb{ width:46px; height:46px; flex-shrink:0; background:#fff; border-radius:9px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .preview-item .pi-thumb img{ max-width:100%; max-height:100%; object-fit:contain; }
+  .preview-item .pi-num{ font-family:var(--mono); font-size:10px; color:var(--text-faint); width:16px; flex-shrink:0; text-align:center; }
+  .preview-item .pi-info{ flex:1; min-width:0; }
+  .preview-item .pi-name{ font-weight:600; font-size:13.5px; margin-bottom:2px; }
+  .preview-item .pi-meta{ font-family:var(--mono); font-size:10.5px; color:var(--text-dim); }
+  .preview-item .pi-tag{ font-family:var(--mono); font-size:8.5px; letter-spacing:0.5px; color:var(--accent); text-transform:uppercase; background:var(--accent-soft); padding:2px 7px; border-radius:20px; flex-shrink:0; }
   .sd-exercise{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px; }
   .sd-exercise-name{ font-weight:600; font-size:14px; margin-bottom:10px; }
   .sd-set-pills{ display:flex; gap:8px; flex-wrap:wrap; }
@@ -354,6 +365,22 @@
     </div>
     <div class="section-label">Your 5-workout split</div>
     <div class="day-list" id="dayList"></div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="screen" id="screen-preview">
+    <div class="wk-topbar">
+      <div class="close-btn" id="closePreview">&#8592;</div>
+      <div class="wk-titles">
+        <div class="day" id="previewDayName">WORKOUT 1</div>
+        <div class="count" id="previewCount">8 exercises</div>
+      </div>
+    </div>
+    <p class="section-sub" style="padding-top:0;">A quick look at everything in this session before you start.</p>
+    <div class="preview-list" id="previewList"></div>
+    <div class="backup-row" style="padding-top:6px;">
+      <button class="nav-btn primary" id="btnStartFromPreview" style="width:100%;">Start Workout</button>
+    </div>
   </div>
 
   <!-- WORKOUT -->
@@ -551,9 +578,10 @@
       <div class="m-eyebrow">Ready?</div>
       <h3 id="modalStartTitle">Start Workout 1?</h3>
       <p id="modalStartSub">8 exercises · 60–70 min. The timer starts as soon as you tap start.</p>
-      <div class="modal-row">
+      <div class="modal-row modal-row-3">
         <button class="nav-btn" id="btnCancelStart">Cancel</button>
-        <button class="nav-btn primary" id="btnConfirmStart">Start time &#8594;</button>
+        <button class="nav-btn" id="btnPreviewStart">Preview</button>
+        <button class="nav-btn primary" id="btnConfirmStart">Start</button>
       </div>
     </div>
   </div>
@@ -616,7 +644,7 @@ const ICON_IMAGES = {"arnoldpress": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
 // serving a stale cached copy from the home screen icon. Your data lives
 // in this origin's storage regardless, so this never touches it.
 // ============================================================
-const APP_BUILD = '2026-07-08T21:53';
+const APP_BUILD = '2026-07-09T10:23';
 (function checkForUpdate(){
   fetch('version.json?t=' + Date.now(), {cache: 'no-store'})
     .then(res => res.ok ? res.json() : null)
@@ -646,10 +674,10 @@ const DAYS = [
         desc:'Press the kettlebell from shoulder height to full lockout overhead, one arm at a time, keeping the ribcage stacked over the hips to avoid leaning back. Finish all reps on one side, then switch.'},
       {name:'Kettlebell Lateral Raise', cat:'Shoulders', icon:'lateralraise', sets:'4 × 12–15', weight:11, weightMax:40, weightText:'8–15 lb',
         desc:'Raise the kettlebell out to your side with one arm until it\'s roughly parallel to the floor, leading with the elbow. With a single kettlebell, alternate arms each set.'},
-      {name:'Overhead Kettlebell Triceps Extension', cat:'Triceps', icon:'tricepsext', sets:'4 × 10–12', weight:30, weightMax:40, weightText:'25–35 lb',
-        desc:'Holding the kettlebell overhead with both hands, lower it slowly behind your head by bending the elbows, then extend back to lockout.'},
       {name:'Leg Raises', cat:'Abs', icon:'legraise', sets:'4 × 15', weight:null, weightText:'Bodyweight',
         desc:'Lying flat, keep legs straight and lift them to vertical without letting your lower back arch off the floor, then lower with control.'},
+      {name:'Overhead Kettlebell Triceps Extension', cat:'Triceps', icon:'tricepsext', sets:'4 × 10–12', weight:30, weightMax:40, weightText:'25–35 lb',
+        desc:'Holding the kettlebell overhead with both hands, lower it slowly behind your head by bending the elbows, then extend back to lockout.'},
       {name:'Plank', cat:'Abs', icon:'plank', sets:'3 × 60 sec', weight:null, weightText:'Bodyweight',
         desc:'Hold a straight line from shoulders to ankles on forearms and toes, bracing the core and glutes so the hips don\'t sag or pike up.'},
     ]
@@ -659,18 +687,18 @@ const DAYS = [
     exercises:[
       {name:'Single Arm Kettlebell Row', cat:'Pull', icon:'row', sets:'5 × 10–12', weight:38, weightMax:40, weightText:'35–40 lb',
         desc:'Hinge at the hips with a flat back, and pull the kettlebell toward your hip, driving the elbow up and back rather than just curling with the arm. Finish all reps on one side, then switch.'},
-      {name:'Gorilla Rows', cat:'Pull', icon:'gorillarow', sets:'4 × 12', weight:38, weightMax:40, weightText:'35–40 lb',
-        desc:'With a single kettlebell on the floor in a wide squat stance, hinge down and row it with one hand while bracing the other hand on your knee. Keep the hips low and spine neutral, then switch sides evenly across your sets.'},
       {name:'Bent Over Reverse Fly', cat:'Rear Delts', icon:'reversefly', sets:'3 × 15', weight:10, weightMax:40, weightText:'8–12 lb',
         desc:'Hinge forward with a flat back and raise the kettlebell out to the side with one arm in a wide arc, squeezing the shoulder blade at the top. Alternate arms each set since you\'re working with a single kettlebell.'},
+      {name:'Gorilla Rows', cat:'Pull', icon:'gorillarow', sets:'4 × 12', weight:38, weightMax:40, weightText:'35–40 lb',
+        desc:'With a single kettlebell on the floor in a wide squat stance, hinge down and row it with one hand while bracing the other hand on your knee. Keep the hips low and spine neutral, then switch sides evenly across your sets.'},
       {name:'Suitcase Deadlift', cat:'Hinge', icon:'suitcasedeadlift', sets:'4 × 12', weight:40, weightMax:40, weightText:'40 lb',
         desc:'Hold the kettlebell at your side like a suitcase and hinge down and up while resisting the urge to lean sideways toward the load. Switch sides between sets to train evenly.'},
       {name:'Kettlebell Curl', cat:'Biceps', icon:'curl', sets:'4 × 10–12', weight:25, weightMax:40, weightText:'20–30 lb',
         desc:'Curl the kettlebell from a hanging arm to shoulder height with one arm, keeping the elbow pinned to your side. Alternate arms each set with your single kettlebell.'},
-      {name:'Hammer Curl', cat:'Biceps', icon:'hammercurl', sets:'3 × 12', weight:22, weightMax:40, weightText:'20–25 lb',
-        desc:'Same curling motion as a standard curl, but with your palm facing in throughout, which shifts emphasis onto the forearm and outer bicep. Alternate arms each set.'},
       {name:'Russian Twists', cat:'Abs', icon:'russiantwist', sets:'3 × 30', weight:20, weightMax:40, weightText:'20 lb',
         desc:'Sit with knees bent and torso leaned back slightly, then rotate the single kettlebell from hip to hip with both hands, keeping the chest tall rather than rounding forward.'},
+      {name:'Hammer Curl', cat:'Biceps', icon:'hammercurl', sets:'3 × 12', weight:22, weightMax:40, weightText:'20–25 lb',
+        desc:'Same curling motion as a standard curl, but with your palm facing in throughout, which shifts emphasis onto the forearm and outer bicep. Alternate arms each set.'},
       {name:'Reverse Crunch', cat:'Abs', icon:'reversecrunch', sets:'3 × 15', weight:null, weightText:'Bodyweight',
         desc:'Lying on your back, curl the hips off the floor by drawing the knees toward the chest, using the lower abs rather than swinging the legs.'},
     ]
@@ -680,22 +708,22 @@ const DAYS = [
     exercises:[
       {name:'Diamond Pushups', cat:'Push', icon:'pushup', sets:'4 × Failure', weight:null, weightText:'Bodyweight',
         desc:'Form a diamond with your thumbs and index fingers under your chest and lower down. The narrow hand position emphasizes the triceps.'},
-      {name:'Close Grip Pushups', cat:'Push', icon:'pushup', sets:'3 × Failure', weight:null, weightText:'Bodyweight',
-        desc:'Hands set just inside shoulder width, elbows tracking close to the ribs as you lower — a slightly wider variation on the diamond pushup.'},
       {name:'Single Arm Kettlebell Shoulder Press', cat:'Press', icon:'overheadpress', sets:'4 × 8–10', weight:35, weightMax:40, weightText:'30–40 lb',
         desc:'Press the kettlebell from shoulder to overhead lockout, bracing the core so the ribs stay stacked and the lower back doesn\'t arch. Finish all reps on one side, then switch.'},
-      {name:'Single Arm Kettlebell Arnold Press', cat:'Press', icon:'arnoldpress', sets:'3 × 10', weight:22, weightMax:40, weightText:'20–25 lb',
-        desc:'Start with the kettlebell racked palm-in near the shoulder, rotate the palm outward as you press overhead, then reverse the rotation on the way down. Complete one arm, then switch.'},
       {name:'Kettlebell Lateral Raise', cat:'Shoulders', icon:'lateralraise', sets:'5 × 15', weight:10, weightMax:40, weightText:'8–12 lb',
         desc:'Raise the kettlebell out to your side with one arm to shoulder height, leading with the elbow and controlling the lowering phase. Alternate arms each set.'},
-      {name:'Kettlebell Front Raise', cat:'Shoulders', icon:'frontraise', sets:'3 × 15', weight:12, weightMax:40, weightText:'10–15 lb',
-        desc:'Raise the kettlebell straight out in front to shoulder height with one arm, a slight bend in the elbow, and no swing from the lower back. Alternate arms each set.'},
-      {name:'Overhead Kettlebell Triceps Extension', cat:'Triceps', icon:'tricepsext', sets:'4 × 12', weight:32, weightMax:40, weightText:'30–35 lb',
-        desc:'Lower the kettlebell behind the head with both hands by bending the elbows, then extend back to full overhead lockout.'},
       {name:'Kettlebell Concentration Curl', cat:'Biceps', icon:'concentrationcurl', sets:'4 × 12', weight:22, weightMax:40, weightText:'20–25 lb',
         desc:'Seated, brace the back of your upper arm against your inner thigh and curl the kettlebell with strict, isolated form, then switch sides.'},
+      {name:'Close Grip Pushups', cat:'Push', icon:'pushup', sets:'3 × Failure', weight:null, weightText:'Bodyweight',
+        desc:'Hands set just inside shoulder width, elbows tracking close to the ribs as you lower — a slightly wider variation on the diamond pushup.'},
+      {name:'Single Arm Kettlebell Arnold Press', cat:'Press', icon:'arnoldpress', sets:'3 × 10', weight:22, weightMax:40, weightText:'20–25 lb',
+        desc:'Start with the kettlebell racked palm-in near the shoulder, rotate the palm outward as you press overhead, then reverse the rotation on the way down. Complete one arm, then switch.'},
+      {name:'Kettlebell Front Raise', cat:'Shoulders', icon:'frontraise', sets:'3 × 15', weight:12, weightMax:40, weightText:'10–15 lb',
+        desc:'Raise the kettlebell straight out in front to shoulder height with one arm, a slight bend in the elbow, and no swing from the lower back. Alternate arms each set.'},
       {name:'Kettlebell Hammer Curl', cat:'Biceps', icon:'hammercurl', sets:'3 × 12', weight:22, weightMax:40, weightText:'20–25 lb',
         desc:'Curl with a neutral, palm-in grip, keeping the elbow fixed at your side throughout the movement. Alternate arms each set.'},
+      {name:'Overhead Kettlebell Triceps Extension', cat:'Triceps', icon:'tricepsext', sets:'4 × 12', weight:32, weightMax:40, weightText:'30–35 lb',
+        desc:'Lower the kettlebell behind the head with both hands by bending the elbows, then extend back to full overhead lockout.'},
       {name:'100 Pushups', cat:'Push', icon:'pushupfinisher', sets:'To 100 total', weight:null, weightText:'Bodyweight',
         desc:'Finisher: accumulate 100 pushups in as few sets as needed, breaking up the reps and resting briefly whenever form starts to break down.'},
     ]
@@ -705,22 +733,22 @@ const DAYS = [
     exercises:[
       {name:'Goblet Squat', cat:'Legs', icon:'squat', sets:'5 × 12', weight:40, weightMax:40, weightText:'40 lb',
         desc:'Hold the kettlebell at chest height with both hands and squat down between your knees, keeping your chest up and driving through the whole foot to stand.'},
-      {name:'Bulgarian Split Squat', cat:'Legs', icon:'splitsquat', sets:'4 × 10', weight:35, weightMax:40, weightText:'30–40 lb',
-        desc:'With your rear foot elevated on a bench, hold the kettlebell at chest height and lower straight down on the front leg until the back knee nearly touches the floor, then drive up.'},
-      {name:'Romanian Deadlift', cat:'Hinge', icon:'rdl', sets:'4 × 12', weight:40, weightMax:40, weightText:'40 lb',
-        desc:'Hold the kettlebell with both hands in front of your thighs. Keeping a soft knee bend and flat back, hinge your hips back and lower the kettlebell along your legs until you feel a hamstring stretch, then drive your hips forward to stand.'},
-      {name:'Kettlebell Swings', cat:'Hinge', icon:'swing', sets:'8 × 20', weight:40, weightMax:40, weightText:'40 lb',
-        desc:'Hike the kettlebell back between your legs, then snap the hips forward explosively to send it to chest height — power comes from the hips, not the arms.'},
-      {name:'Single Leg Calf Raise', cat:'Legs', icon:'calfraise', sets:'4 × 20', weight:40, weightMax:40, weightText:'40 lb',
-        desc:'Holding the kettlebell for extra load, rise onto the toes of one foot at a time, pausing briefly at the top before lowering under control.'},
       {name:'Leg Raises', cat:'Abs', icon:'legraise', sets:'3 × 15', weight:null, weightText:'Bodyweight',
         desc:'Keep legs straight and lift them to vertical without arching the lower back off the floor, then lower slowly.'},
+      {name:'Romanian Deadlift', cat:'Hinge', icon:'rdl', sets:'4 × 12', weight:40, weightMax:40, weightText:'40 lb',
+        desc:'Hold the kettlebell with both hands in front of your thighs. Keeping a soft knee bend and flat back, hinge your hips back and lower the kettlebell along your legs until you feel a hamstring stretch, then drive your hips forward to stand.'},
       {name:'Bicycle Crunches', cat:'Abs', icon:'bicyclecrunch', sets:'3 × 30', weight:null, weightText:'Bodyweight',
         desc:'Bring opposite elbow to opposite knee in a pedaling motion, rotating through the torso rather than just tugging with the arms.'},
+      {name:'Bulgarian Split Squat', cat:'Legs', icon:'splitsquat', sets:'4 × 10', weight:35, weightMax:40, weightText:'30–40 lb',
+        desc:'With your rear foot elevated on a bench, hold the kettlebell at chest height and lower straight down on the front leg until the back knee nearly touches the floor, then drive up.'},
       {name:'Hollow Hold', cat:'Abs', icon:'hollow', sets:'3 × 30 sec', weight:null, weightText:'Bodyweight',
         desc:'Lie on your back, press the lower back into the floor, and lift shoulders and legs slightly off the ground into a shallow "banana" shape.'},
+      {name:'Kettlebell Swings', cat:'Hinge', icon:'swing', sets:'8 × 20', weight:40, weightMax:40, weightText:'40 lb',
+        desc:'Hike the kettlebell back between your legs, then snap the hips forward explosively to send it to chest height — power comes from the hips, not the arms.'},
       {name:'Plank', cat:'Abs', icon:'plank', sets:'3 × 60 sec', weight:null, weightText:'Bodyweight',
         desc:'Hold a straight line from shoulders to ankles on forearms and toes, keeping the hips level and core braced.'},
+      {name:'Single Leg Calf Raise', cat:'Legs', icon:'calfraise', sets:'4 × 20', weight:40, weightMax:40, weightText:'40 lb',
+        desc:'Holding the kettlebell for extra load, rise onto the toes of one foot at a time, pausing briefly at the top before lowering under control.'},
     ]
   },
   {
@@ -929,7 +957,7 @@ async function logSet(dayKey, exName, weight, reps, timeSec, setNumber){
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  document.getElementById('tabbar').style.display = (id==='screen-workout' || id==='screen-complete' || id==='screen-session-detail' || id==='screen-auth') ? 'none' : 'flex';
+  document.getElementById('tabbar').style.display = (id==='screen-workout' || id==='screen-complete' || id==='screen-session-detail' || id==='screen-auth' || id==='screen-preview') ? 'none' : 'flex';
 }
 function setTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
@@ -1039,13 +1067,57 @@ document.getElementById('btnCancelStart').addEventListener('click', ()=>{
   document.getElementById('modalStart').classList.remove('active');
   pendingDayIdx = null;
 });
-document.getElementById('btnConfirmStart').addEventListener('click', ()=>{
-  document.getElementById('modalStart').classList.remove('active');
-  if(pendingDayIdx === null) return;
-  currentDayIdx = pendingDayIdx; currentExIdx = 0; pendingDayIdx = null;
+function beginWorkout(dayIdx){
+  currentDayIdx = dayIdx; currentExIdx = 0;
   startTimer();
   renderExercise();
   showScreen('screen-workout');
+}
+document.getElementById('btnConfirmStart').addEventListener('click', ()=>{
+  document.getElementById('modalStart').classList.remove('active');
+  if(pendingDayIdx === null) return;
+  const dayIdx = pendingDayIdx; pendingDayIdx = null;
+  beginWorkout(dayIdx);
+});
+document.getElementById('btnPreviewStart').addEventListener('click', ()=>{
+  document.getElementById('modalStart').classList.remove('active');
+  if(pendingDayIdx === null) return;
+  openPreview(pendingDayIdx);
+  pendingDayIdx = null;
+});
+
+// ---- preview screen ----
+let previewDayIdx = null;
+function openPreview(dayIdx){
+  previewDayIdx = dayIdx;
+  const d = DAYS[dayIdx];
+  document.getElementById('previewDayName').textContent = d.label.toUpperCase();
+  document.getElementById('previewCount').textContent = `${d.exercises.length} exercises · ${d.time}`;
+  const list = document.getElementById('previewList');
+  list.innerHTML = '';
+  d.exercises.forEach((ex, i)=>{
+    const item = document.createElement('div');
+    item.className = 'preview-item';
+    item.innerHTML = `
+      <div class="pi-num">${i+1}</div>
+      <div class="pi-thumb"><img src="${ICON_IMAGES[ex.icon] || ''}" alt=""></div>
+      <div class="pi-info">
+        <div class="pi-name">${ex.name}</div>
+        <div class="pi-meta">${ex.sets}${ex.weight ? ' · ' + ex.weightText : ''}</div>
+      </div>
+      <div class="pi-tag">${ex.cat}</div>`;
+    list.appendChild(item);
+  });
+  showScreen('screen-preview');
+}
+document.getElementById('closePreview').addEventListener('click', ()=>{
+  previewDayIdx = null;
+  setTab('dashboard');
+});
+document.getElementById('btnStartFromPreview').addEventListener('click', ()=>{
+  if(previewDayIdx === null) return;
+  const dayIdx = previewDayIdx; previewDayIdx = null;
+  beginWorkout(dayIdx);
 });
 document.getElementById('closeWorkout').addEventListener('click', ()=>{
   quitModalPrevPaused = timerPaused;
