@@ -51,6 +51,21 @@
     --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+
+  /* ---------- GLOBAL INTERACTION ANIMATIONS ---------- */
+  .nav-btn, .ws-btn, .tab, .day-card, .go-btn, .range-btn, .history-card,
+  .preview-item, .close-btn, .heat-cell, .sd-set-pill, .range-btn, button{
+    transition: transform 0.13s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.13s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .nav-btn:active, .ws-btn:active, .tab:active, .day-card:active, .go-btn:active,
+  .range-btn:active, .history-card:active, .preview-item:active, .close-btn:active,
+  .heat-cell:active, .sd-set-pill:active, button:active{
+    transform: scale(0.94); opacity:0.8;
+  }
+  @keyframes fadeSlideUp{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+  @keyframes fadeIn{ from{ opacity:0; } to{ opacity:1; } }
+  @keyframes popIn{ 0%{ opacity:0; transform:scale(0.6); } 60%{ opacity:1; transform:scale(1.08); } 100%{ transform:scale(1); } }
+  .anim-pop{ animation: fadeSlideUp 0.36s cubic-bezier(0.22, 1, 0.36, 1) both; }
   html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--body); overscroll-behavior:none; height:100%;}
   body{ -webkit-user-select:none; user-select:none; }
   #app{ max-width:480px; margin:0 auto; min-height:100vh; position:relative; display:flex; flex-direction:column; }
@@ -147,7 +162,7 @@
     aspect-ratio: 1.5/1; display:flex; align-items:center; justify-content:center;
     margin-bottom:18px; position:relative; padding:14px;
   }
-  .icon-wrap img{ max-width:100%; max-height:100%; object-fit:contain; }
+  .icon-wrap img{ max-width:100%; max-height:100%; object-fit:contain; transition: opacity 0.22s ease; }
   .cat-tag{
     position:absolute; top:12px; left:12px; font-family:var(--mono); font-size:9px; letter-spacing:1.5px;
     color:var(--text-faint); text-transform:uppercase; background:var(--bg); padding:3px 8px; border-radius:20px; border:1px solid var(--border);
@@ -178,10 +193,16 @@
     color:var(--text); font-size:16px; display:flex; align-items:center; justify-content:center;
   }
   .ws-value{ font-family:var(--mono); font-size:15px; min-width:52px; text-align:center; }
+  .ws-bump{ animation: popIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .ws-editable{ cursor:pointer; border-bottom:1px dashed var(--text-faint); padding-bottom:1px; }
+  .ws-input{
+    width:56px; text-align:center; background:transparent; border:none; border-bottom:2px solid var(--accent);
+    color:var(--text); font-family:var(--mono); font-size:15px; padding:0 0 1px; outline:none; -webkit-appearance:none;
+  }
 
   .set-progress{ display:flex; gap:8px; justify-content:center; padding:12px 0 2px; flex-wrap:wrap; }
-  .set-pip{ width:11px; height:11px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); }
-  .set-pip.done{ background:var(--accent); border-color:var(--accent); }
+  .set-pip{ width:11px; height:11px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); transition: background 0.2s ease, border-color 0.2s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .set-pip.done{ background:var(--accent); border-color:var(--accent); animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
   .nav-row{ display:flex; gap:10px; padding-top:16px; }
   .nav-btn{
@@ -198,8 +219,9 @@
     display:flex; align-items:center; gap:12px; padding: 12px 20px calc(12px + var(--safe-bottom));
     z-index:20;
   }
-  .timerbar .t-dot{ width:8px; height:8px; border-radius:50%; background:var(--accent); flex-shrink:0; }
-  .timerbar.paused .t-dot{ background:var(--text-faint); }
+  .timerbar .t-dot{ width:8px; height:8px; border-radius:50%; background:var(--accent); flex-shrink:0; animation: dotPulse 1.6s ease-in-out infinite; }
+  .timerbar.paused .t-dot{ background:var(--text-faint); animation:none; }
+  @keyframes dotPulse{ 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.5; transform:scale(1.3); } }
   .timerbar .t-time{ font-family:var(--mono); font-size:20px; letter-spacing:1px; flex:1; }
   .timerbar .t-lbl{ font-family:var(--mono); font-size:9px; letter-spacing:1.5px; color:var(--text-faint); text-transform:uppercase; margin-right:auto; margin-left:-4px; }
   .t-pause-btn{
@@ -209,13 +231,16 @@
 
   /* ---------- MODAL OVERLAY ---------- */
   .modal-overlay{
-    position:fixed; inset:0; background:rgba(10,11,13,0.72); display:none; align-items:flex-end; justify-content:center; z-index:50;
+    position:fixed; inset:0; background:rgba(10,11,13,0.72); display:flex; align-items:flex-end; justify-content:center; z-index:50;
+    opacity:0; visibility:hidden; pointer-events:none; transition: opacity 0.22s ease, visibility 0.22s;
   }
-  .modal-overlay.active{ display:flex; }
+  .modal-overlay.active{ opacity:1; visibility:visible; pointer-events:auto; }
   .modal-sheet{
     width:100%; max-width:480px; background:var(--surface); border-top-left-radius:24px; border-top-right-radius:24px;
     padding: 26px 22px calc(26px + var(--safe-bottom)); border:1px solid var(--border); border-bottom:none;
+    transform: translateY(24px); transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
   }
+  .modal-overlay.active .modal-sheet{ transform: translateY(0); }
   .modal-sheet .m-eyebrow{ font-family:var(--mono); font-size:10px; letter-spacing:2px; color:var(--text-faint); text-transform:uppercase; margin-bottom:6px; }
   .modal-sheet h3{ font-family:var(--disp); font-size:24px; text-transform:uppercase; margin:0 0 8px; }
   .modal-sheet p{ color:var(--text-dim); font-size:14px; margin:0 0 20px; line-height:1.5; }
@@ -226,7 +251,7 @@
   #screen-complete{ align-items:center; justify-content:center; text-align:center; padding:40px 30px; gap:16px; }
   #screen-complete .ring{
     width:110px; height:110px; border-radius:50%; border:3px solid var(--accent); display:flex; align-items:center; justify-content:center;
-    margin-bottom:10px;
+    margin-bottom:10px; animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
   #screen-complete h2{ font-family:var(--disp); font-size:26px; text-transform:uppercase; margin:0; }
   #screen-complete p{ color:var(--text-dim); font-size:14px; margin:0 0 10px; }
@@ -293,7 +318,10 @@
 
   .session-detail-body{ flex:1; overflow-y:auto; padding: 10px 20px 20px; display:flex; flex-direction:column; gap:12px; }
   .preview-list{ flex:1; overflow-y:auto; padding: 4px 20px 10px; display:flex; flex-direction:column; gap:10px; }
-  .preview-item{ display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:10px 14px; }
+  .preview-item{ display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:10px 14px; border:1px solid var(--border); }
+  .preview-item.pi-current{ border-color:var(--accent); box-shadow: inset 0 0 0 1px var(--accent-soft); }
+  .preview-item.pi-done{ opacity:0.5; }
+  .preview-item.pi-done .pi-num{ color:var(--accent); font-size:13px; }
   .preview-item .pi-thumb{ width:46px; height:46px; flex-shrink:0; background:#fff; border-radius:9px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
   .preview-item .pi-thumb img{ max-width:100%; max-height:100%; object-fit:contain; }
   .preview-item .pi-num{ font-family:var(--mono); font-size:10px; color:var(--text-faint); width:16px; flex-shrink:0; text-align:center; }
@@ -338,6 +366,8 @@
   }
   .tab{ flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px; color:var(--text-faint); }
   .tab.active{ color:var(--accent); }
+  .tab svg{ transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .tab.active svg{ transform: scale(1.12); }
   .tab .tlabel{ font-family:var(--mono); font-size:9px; letter-spacing:1px; text-transform:uppercase; }
 </style>
 </head>
@@ -408,6 +438,9 @@
       <div class="wk-titles">
         <div class="day" id="wkDayName">WORKOUT 1</div>
         <div class="count" id="wkCount">1 / 8</div>
+      </div>
+      <div class="close-btn" id="openWorkoutPreview" title="See what's coming up">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       </div>
     </div>
     <div class="dots" id="wkDots"></div>
@@ -535,12 +568,9 @@
     <div class="section-label">Day breakdown</div>
     <div class="day-table" id="dayTable"></div>
 
-    <div class="section-label">Focus balance</div>
-    <div class="bar-list" id="categoryList"></div>
-
-    <div class="section-label">Progression</div>
-    <div class="progress-wrap">
-      <select id="progressSelect" class="progress-select"></select>
+    <div class="section-label">Time range</div>
+    <p class="section-sub" style="padding-top:0;">Filters both the focus balance and progression sections below.</p>
+    <div class="progress-wrap" style="padding-bottom:0;">
       <div class="range-selector" id="rangeSelector">
         <button class="range-btn" data-range="1W">1W</button>
         <button class="range-btn" data-range="1M">1M</button>
@@ -549,6 +579,14 @@
         <button class="range-btn" data-range="1Y">1Y</button>
         <button class="range-btn active" data-range="ALL">All</button>
       </div>
+    </div>
+
+    <div class="section-label">Focus balance</div>
+    <div class="bar-list" id="categoryList"></div>
+
+    <div class="section-label">Progression</div>
+    <div class="progress-wrap">
+      <select id="progressSelect" class="progress-select"></select>
       <div id="progressChartWrap"></div>
       <div id="progressEmpty" class="empty-note" style="display:none; margin:10px 0 0;">Log a few sets of this exercise and your weight trend will show up here.</div>
     </div>
@@ -662,7 +700,7 @@ const ICON_IMAGES = {"arnoldpress": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
 // serving a stale cached copy from the home screen icon. Your data lives
 // in this origin's storage regardless, so this never touches it.
 // ============================================================
-const APP_BUILD = '2026-07-09T12:07';
+const APP_BUILD = '2026-07-09T14:00';
 (function checkForUpdate(){
   fetch('version.json?t=' + Date.now(), {cache: 'no-store'})
     .then(res => res.ok ? res.json() : null)
@@ -974,7 +1012,11 @@ async function logSet(dayKey, exName, weight, reps, timeSec, setNumber){
 // ============================================================
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  const target = document.getElementById(id);
+  target.classList.add('active');
+  target.classList.remove('anim-pop');
+  void target.offsetWidth; // force reflow so the animation replays every time
+  target.classList.add('anim-pop');
   document.getElementById('tabbar').style.display = (id==='screen-workout' || id==='screen-complete' || id==='screen-session-detail' || id==='screen-auth' || id==='screen-preview' || id==='screen-loading') ? 'none' : 'flex';
 }
 function setTab(name){
@@ -1019,7 +1061,8 @@ function renderDashboard(){
     const done = hasSessionToday(d.key);
     const isRecommended = i===recIdx;
     const card = document.createElement('div');
-    card.className = 'day-card' + (isRecommended ? ' today' : '');
+    card.className = 'day-card anim-pop' + (isRecommended ? ' today' : '');
+    card.style.animationDelay = `${i*40}ms`;
     card.innerHTML = `
       <div class="daynum">${d.short}</div>
       <div class="info">
@@ -1106,8 +1149,10 @@ document.getElementById('btnPreviewStart').addEventListener('click', ()=>{
 
 // ---- preview screen ----
 let previewDayIdx = null;
-function openPreview(dayIdx){
+let previewFromWorkout = false;
+function openPreview(dayIdx, fromWorkout){
   previewDayIdx = dayIdx;
+  previewFromWorkout = !!fromWorkout;
   const d = DAYS[dayIdx];
   document.getElementById('previewDayName').textContent = d.label.toUpperCase();
   document.getElementById('previewCount').textContent = `${d.exercises.length} exercises · ${d.time}`;
@@ -1115,27 +1160,49 @@ function openPreview(dayIdx){
   list.innerHTML = '';
   d.exercises.forEach((ex, i)=>{
     const item = document.createElement('div');
-    item.className = 'preview-item';
+    const isDone = previewFromWorkout && i < currentExIdx;
+    const isCurrent = previewFromWorkout && i === currentExIdx;
+    item.className = 'preview-item anim-pop' + (isCurrent ? ' pi-current' : '') + (isDone ? ' pi-done' : '');
+    item.style.animationDelay = `${Math.min(i,10)*25}ms`;
     item.innerHTML = `
-      <div class="pi-num">${i+1}</div>
+      <div class="pi-num">${isDone ? '&#10003;' : i+1}</div>
       <div class="pi-thumb"><img src="${ICON_IMAGES[ex.icon] || ''}" alt=""></div>
       <div class="pi-info">
         <div class="pi-name">${ex.name}</div>
         <div class="pi-meta">${ex.sets}${ex.weight ? ' · ' + ex.weightText : ''}</div>
       </div>
-      <div class="pi-tag">${ex.cat}</div>`;
+      ${isCurrent ? '<div class="pi-tag" style="color:var(--bg); background:var(--accent);">Now</div>' : `<div class="pi-tag">${ex.cat}</div>`}`;
     list.appendChild(item);
   });
+  const startBtn = document.getElementById('btnStartFromPreview');
+  startBtn.textContent = previewFromWorkout ? 'Back to Workout' : 'Start Workout';
   showScreen('screen-preview');
+  if(previewFromWorkout){
+    const currentItem = list.children[currentExIdx];
+    if(currentItem) currentItem.scrollIntoView({block:'center'});
+  }
 }
 document.getElementById('closePreview').addEventListener('click', ()=>{
-  previewDayIdx = null;
-  setTab('dashboard');
+  if(previewFromWorkout){
+    previewDayIdx = null;
+    showScreen('screen-workout');
+  } else {
+    previewDayIdx = null;
+    setTab('dashboard');
+  }
 });
 document.getElementById('btnStartFromPreview').addEventListener('click', ()=>{
   if(previewDayIdx === null) return;
+  if(previewFromWorkout){
+    previewDayIdx = null;
+    showScreen('screen-workout');
+    return;
+  }
   const dayIdx = previewDayIdx; previewDayIdx = null;
   beginWorkout(dayIdx);
+});
+document.getElementById('openWorkoutPreview').addEventListener('click', ()=>{
+  openPreview(currentDayIdx, true);
 });
 document.getElementById('closeWorkout').addEventListener('click', ()=>{
   quitModalPrevPaused = timerPaused;
@@ -1174,11 +1241,13 @@ function updateActionButton(){
   const day = DAYS[currentDayIdx];
   const isLast = currentExIdx === day.exercises.length - 1;
   const btn = document.getElementById('btnNext');
+  const prevText = btn.textContent;
   if(currentTotalSets > 1 && currentSetIndex < currentTotalSets){
     btn.textContent = `Complete Set ${currentSetIndex + 1}`;
   } else {
     btn.textContent = isLast ? 'Finish ✓' : 'Next Workout →';
   }
+  if(btn.textContent !== prevText) bumpValue(btn);
   renderSetDots();
 }
 function renderExercise(){
@@ -1223,8 +1292,10 @@ function renderExercise(){
 
   // exercise diagram (sourced illustration, one image per exercise)
   const exImage = document.getElementById('exImage');
+  exImage.style.opacity = '0';
   exImage.src = ICON_IMAGES[ex.icon] || '';
   exImage.alt = ex.name;
+  requestAnimationFrame(()=>{ exImage.style.opacity = '1'; });
 
   document.getElementById('exArea').textContent = ex.cat;
 
@@ -1242,47 +1313,97 @@ function renderExercise(){
   updateActionButton();
 }
 
-function updateWeightStepperDisplay(){
-  document.getElementById('wsValue').textContent = `${currentSetWeight} lb`;
+function bumpValue(el){
+  el.classList.remove('ws-bump');
+  void el.offsetWidth;
+  el.classList.add('ws-bump');
 }
-async function adjustWeight(delta){
-  currentSetWeight = Math.max(0, currentSetWeight + delta);
+
+// tap the number itself to type an exact value instead of tapping +/- repeatedly
+function makeValueTappable(elId, getValue, setValue){
+  const el = document.getElementById(elId);
+  el.classList.add('ws-editable');
+  el.addEventListener('click', ()=>{
+    if(el.querySelector('input')) return; // already editing
+    const current = getValue();
+    el.textContent = '';
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.inputMode = 'numeric';
+    input.pattern = '[0-9]*';
+    input.className = 'ws-input';
+    input.value = current;
+    el.appendChild(input);
+    input.focus();
+    input.select();
+    let done = false;
+    const commit = ()=>{
+      if(done) return;
+      done = true;
+      let val = parseInt(input.value, 10);
+      if(isNaN(val) || val < 0) val = current;
+      setValue(val);
+    };
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter') input.blur();
+    });
+  });
+}
+
+function updateWeightStepperDisplay(){
+  const el = document.getElementById('wsValue');
+  el.textContent = `${currentSetWeight} lb`;
+  bumpValue(el);
+}
+async function setCurrentWeight(val){
+  currentSetWeight = Math.max(0, val);
   updateWeightStepperDisplay();
   const day = DAYS[currentDayIdx];
   const ex = day.exercises[currentExIdx];
   weightDefaults[ex.name] = currentSetWeight;
   await saveWeightDefaults();
 }
+async function adjustWeight(delta){ await setCurrentWeight(currentSetWeight + delta); }
 document.getElementById('wsMinus').addEventListener('click', ()=> adjustWeight(-currentWeightStep));
 document.getElementById('wsPlus').addEventListener('click', ()=> adjustWeight(currentWeightStep));
+makeValueTappable('wsValue', ()=>currentSetWeight, setCurrentWeight);
 
 function updateRepsStepperDisplay(){
-  document.getElementById('repsValue').textContent = `${currentSetReps} reps`;
+  const el = document.getElementById('repsValue');
+  el.textContent = `${currentSetReps} reps`;
+  bumpValue(el);
 }
-async function adjustReps(delta){
-  currentSetReps = Math.max(0, currentSetReps + delta);
+async function setCurrentReps(val){
+  currentSetReps = Math.max(0, val);
   updateRepsStepperDisplay();
   const day = DAYS[currentDayIdx];
   const ex = day.exercises[currentExIdx];
   repDefaults[ex.name] = currentSetReps;
   await saveRepDefaults();
 }
+async function adjustReps(delta){ await setCurrentReps(currentSetReps + delta); }
 document.getElementById('repsMinus').addEventListener('click', ()=> adjustReps(-1));
 document.getElementById('repsPlus').addEventListener('click', ()=> adjustReps(1));
+makeValueTappable('repsValue', ()=>currentSetReps, setCurrentReps);
 
 function updateTimeStepperDisplay(){
-  document.getElementById('timeValue').textContent = `${currentSetTime} sec`;
+  const el = document.getElementById('timeValue');
+  el.textContent = `${currentSetTime} sec`;
+  bumpValue(el);
 }
-async function adjustTime(delta){
-  currentSetTime = Math.max(0, currentSetTime + delta);
+async function setCurrentTime(val){
+  currentSetTime = Math.max(0, val);
   updateTimeStepperDisplay();
   const day = DAYS[currentDayIdx];
   const ex = day.exercises[currentExIdx];
   timeDefaults[ex.name] = currentSetTime;
   await saveTimeDefaults();
 }
+async function adjustTime(delta){ await setCurrentTime(currentSetTime + delta); }
 document.getElementById('timeMinus').addEventListener('click', ()=> adjustTime(-currentTimeStep));
 document.getElementById('timePlus').addEventListener('click', ()=> adjustTime(currentTimeStep));
+makeValueTappable('timeValue', ()=>currentSetTime, setCurrentTime);
 
 function undoLastLoggedSetFor(exName){
   const today = todayStr();
@@ -1465,8 +1586,10 @@ function renderDayTable(){
 }
 
 function renderCategoryBalance(){
+  const cutoff = rangeCutoffDate(currentProgressRange);
   const groupCounts = {};
   setLogs.forEach(s=>{
+    if(cutoff && new Date(s.date+'T00:00:00') < cutoff) return;
     const cat = EX_CAT_MAP[s.exName]; if(!cat) return;
     const g = catGroup(cat);
     groupCounts[g] = (groupCounts[g]||0)+1;
@@ -1595,6 +1718,7 @@ document.querySelectorAll('.range-btn').forEach(btn=>{
     document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     currentProgressRange = btn.dataset.range;
+    renderCategoryBalance();
     renderProgressionChart(document.getElementById('progressSelect').value);
   });
 });
@@ -1697,12 +1821,13 @@ function renderHistory(){
   const sorted = [...sessions].sort((a,b)=> b.ts.localeCompare(a.ts));
   document.getElementById('historyEmpty').style.display = sorted.length===0 ? 'block' : 'none';
 
-  sorted.forEach(s=>{
+  sorted.forEach((s,i)=>{
     const dayDef = DAYS.find(d=>d.key===s.dayKey);
     if(!dayDef) return;
     const dateObj = new Date(s.date+'T00:00:00');
     const card = document.createElement('div');
-    card.className = 'history-card';
+    card.className = 'history-card anim-pop';
+    card.style.animationDelay = `${Math.min(i,10)*30}ms`;
     card.innerHTML = `
       <div class="hc-day">${dayDef.short}</div>
       <div class="hc-info">
@@ -1797,7 +1922,9 @@ function openEditSetModal(entry){
 }
 function updateEditSetDisplay(){
   const unitMap = {weight:'lb', reps:'reps', time:'sec'};
-  document.getElementById('editSetValue').textContent = `${editingEntry[editingField]} ${unitMap[editingField]}`;
+  const el = document.getElementById('editSetValue');
+  el.textContent = `${editingEntry[editingField]} ${unitMap[editingField]}`;
+  bumpValue(el);
 }
 document.getElementById('editSetMinus').addEventListener('click', ()=>{
   if(!editingEntry) return;
@@ -1807,6 +1934,11 @@ document.getElementById('editSetMinus').addEventListener('click', ()=>{
 document.getElementById('editSetPlus').addEventListener('click', ()=>{
   if(!editingEntry) return;
   editingEntry[editingField] = editingEntry[editingField] + editingStep;
+  updateEditSetDisplay();
+});
+makeValueTappable('editSetValue', ()=> editingEntry ? editingEntry[editingField] : 0, (val)=>{
+  if(!editingEntry) return;
+  editingEntry[editingField] = Math.max(0, val);
   updateEditSetDisplay();
 });
 document.getElementById('btnCancelEditSet').addEventListener('click', ()=>{
