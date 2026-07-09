@@ -343,10 +343,12 @@
       <div class="auth-brand">WORKOUT DAILY</div>
       <h1 class="auth-title">Sign in</h1>
       <p class="auth-sub">Your workouts sync to this account. Sign in the same way on any device to pick up right where you left off.</p>
-      <input type="email" id="authEmail" class="auth-input" placeholder="Email" autocomplete="email">
-      <input type="password" id="authPassword" class="auth-input" placeholder="Password" autocomplete="current-password">
-      <div class="auth-error" id="authError" style="display:none;"></div>
-      <button class="nav-btn primary" id="btnSignIn" style="width:100%;">Sign In</button>
+      <form id="authForm" autocomplete="on">
+        <input type="email" id="authEmail" name="username" class="auth-input" placeholder="Email" autocomplete="username" inputmode="email" required>
+        <input type="password" id="authPassword" name="password" class="auth-input" placeholder="Password" autocomplete="current-password" required>
+        <div class="auth-error" id="authError" style="display:none;"></div>
+        <button type="submit" class="nav-btn primary" id="btnSignIn" style="width:100%;">Sign In</button>
+      </form>
       <button class="nav-btn" id="btnSignUp" style="width:100%; margin-top:10px;">Create Account</button>
       <div class="auth-loading" id="authLoading" style="display:none;">Working…</div>
     </div>
@@ -644,7 +646,7 @@ const ICON_IMAGES = {"arnoldpress": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
 // serving a stale cached copy from the home screen icon. Your data lives
 // in this origin's storage regardless, so this never touches it.
 // ============================================================
-const APP_BUILD = '2026-07-09T10:23';
+const APP_BUILD = '2026-07-09T11:32';
 (function checkForUpdate(){
   fetch('version.json?t=' + Date.now(), {cache: 'no-store'})
     .then(res => res.ok ? res.json() : null)
@@ -1927,8 +1929,9 @@ function friendlyAuthError(err){
   };
   return (err && map[err.code]) || (err && err.message) || 'Something went wrong. Try again.';
 }
-if(document.getElementById('btnSignIn')){
-  document.getElementById('btnSignIn').addEventListener('click', async ()=>{
+if(document.getElementById('authForm')){
+  document.getElementById('authForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
     clearAuthError();
     const email = document.getElementById('authEmail').value.trim();
     const password = document.getElementById('authPassword').value;
@@ -1936,8 +1939,8 @@ if(document.getElementById('btnSignIn')){
     setAuthLoading(true);
     try{
       await firebase.auth().signInWithEmailAndPassword(email, password);
-    }catch(e){
-      showAuthError(friendlyAuthError(e));
+    }catch(e2){
+      showAuthError(friendlyAuthError(e2));
     }
     setAuthLoading(false);
   });
@@ -1963,9 +1966,17 @@ async function signOutUser(){
 // INIT
 // ============================================================
 async function startApp(){
-  await loadSessions();
-  renderDashboard();
+  // Hide the login screen the instant we know the user is authenticated —
+  // before any data loading/rendering, so a slow or failed render can
+  // never leave the login screen stuck on top of a valid session.
   showScreen('screen-dashboard');
+  try{
+    await loadSessions();
+    renderDashboard();
+  }catch(e){
+    console.error('startApp: render failed, retrying once', e);
+    try{ renderDashboard(); }catch(e2){ console.error('startApp: retry also failed', e2); }
+  }
   const stampEl = document.getElementById('buildStamp');
   if(stampEl){
     const d = new Date(APP_BUILD);
@@ -1986,6 +1997,7 @@ document.getElementById('btnSignOut') && document.getElementById('btnSignOut').a
 });
 
 if(FIREBASE_READY && document.getElementById('screen-auth')){
+  firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{ /* ignore — falls back to default persistence */ });
   firebase.auth().onAuthStateChanged((user)=>{
     if(user){
       fbUser = user;
