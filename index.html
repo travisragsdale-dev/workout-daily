@@ -56,6 +56,14 @@
   #app{ max-width:480px; margin:0 auto; min-height:100vh; position:relative; display:flex; flex-direction:column; }
 
   #screen-auth{ align-items:center; justify-content:center; padding: 40px 30px; }
+  #screen-loading{ align-items:center; justify-content:center; }
+  .loading-wrap{ display:flex; flex-direction:column; align-items:center; }
+  .loading-ring{
+    width:52px; height:52px; border-radius:50%;
+    border:3px solid var(--surface-2); border-top-color:var(--accent);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
   .auth-wrap{ width:100%; max-width:340px; }
   .auth-brand{ font-family:var(--disp); font-weight:700; font-size:15px; letter-spacing:2.5px; color:var(--accent); text-align:center; margin-bottom:30px; }
   .auth-title{ font-family:var(--disp); font-size:26px; text-transform:uppercase; margin:0 0 8px; text-align:center; }
@@ -338,7 +346,15 @@
 
   <!-- DASHBOARD -->
   <!-- AUTH -->
-  <div class="screen active" id="screen-auth">
+  <!-- LOADING -->
+  <div class="screen active" id="screen-loading">
+    <div class="loading-wrap">
+      <div class="loading-ring"></div>
+      <div class="auth-brand" style="margin-top:22px; margin-bottom:0;">WORKOUT DAILY</div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-auth">
     <div class="auth-wrap">
       <div class="auth-brand">WORKOUT DAILY</div>
       <h1 class="auth-title">Sign in</h1>
@@ -646,7 +662,7 @@ const ICON_IMAGES = {"arnoldpress": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
 // serving a stale cached copy from the home screen icon. Your data lives
 // in this origin's storage regardless, so this never touches it.
 // ============================================================
-const APP_BUILD = '2026-07-09T11:32';
+const APP_BUILD = '2026-07-09T12:07';
 (function checkForUpdate(){
   fetch('version.json?t=' + Date.now(), {cache: 'no-store'})
     .then(res => res.ok ? res.json() : null)
@@ -959,7 +975,7 @@ async function logSet(dayKey, exName, weight, reps, timeSec, setNumber){
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  document.getElementById('tabbar').style.display = (id==='screen-workout' || id==='screen-complete' || id==='screen-session-detail' || id==='screen-auth' || id==='screen-preview') ? 'none' : 'flex';
+  document.getElementById('tabbar').style.display = (id==='screen-workout' || id==='screen-complete' || id==='screen-session-detail' || id==='screen-auth' || id==='screen-preview' || id==='screen-loading') ? 'none' : 'flex';
 }
 function setTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
