@@ -38,6 +38,10 @@
     --accent:#5C8F2E;
     --accent-dim:#3F631F;
     --accent-soft:rgba(92,143,46,0.16);
+    --heat-1:#20330E;
+    --heat-2:#33511A;
+    --heat-3:#5C8F2E;
+    --heat-4:#94D65C;
     --steel:#5B8FA6;
     --steel-soft:rgba(91,143,166,0.14);
     --text:#F3F1EA;
@@ -341,8 +345,8 @@
   .kpi .lbl{ font-family:var(--mono); font-size:9px; letter-spacing:1px; color:var(--text-faint); text-transform:uppercase; margin-top:4px; }
 
   .heat-wrap{ padding: 10px 20px 6px; }
-  .heat-grid{ display:grid; grid-template-columns: repeat(14, 1fr); gap:4px; }
-  .heat-cell{ aspect-ratio:1; border-radius:3px; background:var(--surface-2); border:1.5px solid transparent; }
+  .heat-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:5px; }
+  .heat-cell{ aspect-ratio:1; border-radius:4px; background:var(--surface-2); border:1.5px solid transparent; }
   .heat-cell.selected{ border-color:var(--text); }
   .heat-legend{ display:flex; justify-content:flex-end; align-items:center; gap:4px; margin-top:8px; font-family:var(--mono); font-size:9px; color:var(--text-faint); }
   .heat-legend .sw{ width:9px; height:9px; border-radius:2px; }
@@ -557,11 +561,11 @@
       <div class="week-bars" id="weekBars"></div>
     </div>
 
-    <div class="section-label">Last 14 weeks</div>
-    <p class="section-sub">Each square is one day, oldest to newest, left to right. Darker means more sessions that day — tap a square for the date.</p>
+    <div class="section-label">Last 6 weeks</div>
+    <p class="section-sub">Each row is one week (Mon–Sun), oldest on top. Brighter green means a longer workout that day — tap a square for details.</p>
     <div class="heat-wrap">
       <div class="heat-grid" id="heatGrid"></div>
-      <div class="heat-legend"><span>less</span><span class="sw" style="background:var(--surface-2)"></span><span class="sw" style="background:var(--accent-dim)"></span><span class="sw" style="background:var(--accent)"></span><span>more</span></div>
+      <div class="heat-legend"><span>shorter</span><span class="sw" style="background:var(--surface-2)"></span><span class="sw" style="background:var(--heat-1)"></span><span class="sw" style="background:var(--heat-2)"></span><span class="sw" style="background:var(--heat-3)"></span><span class="sw" style="background:var(--heat-4)"></span><span>longer</span></div>
       <div class="heat-info" id="heatInfo">Tap a square to see the date</div>
     </div>
 
@@ -700,7 +704,7 @@ const ICON_IMAGES = {"arnoldpress": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
 // serving a stale cached copy from the home screen icon. Your data lives
 // in this origin's storage regardless, so this never touches it.
 // ============================================================
-const APP_BUILD = '2026-07-09T14:00';
+const APP_BUILD = '2026-07-29T22:30';
 (function checkForUpdate(){
   fetch('version.json?t=' + Date.now(), {cache: 'no-store'})
     .then(res => res.ok ? res.json() : null)
@@ -1758,39 +1762,54 @@ function renderStats(){
 
   renderWeekBars();
 
-  // heatmap: last 14 weeks
+  // heatmap: last 6 weeks, Monday-start calendar grid, colored by workout duration
   const grid = document.getElementById('heatGrid');
   grid.innerHTML = '';
   const heatInfo = document.getElementById('heatInfo');
   heatInfo.textContent = 'Tap a square to see the date';
-  const daysBack = 14*7 - 1;
-  const start = new Date(); start.setDate(start.getDate()-daysBack); start.setHours(0,0,0,0);
-  const countByDate = {};
+
+  const nowH = new Date();
+  const dowH = nowH.getDay(); // 0 Sun..6 Sat
+  const mondayOffsetH = dowH===0 ? -6 : 1-dowH;
+  const thisMondayH = new Date(nowH); thisMondayH.setDate(nowH.getDate()+mondayOffsetH); thisMondayH.setHours(0,0,0,0);
+  const gridStart = new Date(thisMondayH); gridStart.setDate(thisMondayH.getDate() - 5*7); // 5 weeks back + current = 6 rows
+
+  const durationByDate = {};
   const sessionsByDate = {};
   sessions.forEach(s=>{
-    countByDate[s.date] = (countByDate[s.date]||0)+1;
+    durationByDate[s.date] = (durationByDate[s.date]||0) + (s.duration||0);
     (sessionsByDate[s.date] = sessionsByDate[s.date]||[]).push(s);
   });
-  for(let i=0;i<=daysBack;i++){
-    const d = new Date(start); d.setDate(start.getDate()+i);
+
+  function heatTier(totalSeconds){
+    if(!totalSeconds) return null;
+    const mins = totalSeconds/60;
+    if(mins <= 20) return 'var(--heat-1)';
+    if(mins <= 30) return 'var(--heat-2)';
+    if(mins <= 40) return 'var(--heat-3)';
+    return 'var(--heat-4)';
+  }
+
+  for(let i=0; i<42; i++){
+    const d = new Date(gridStart); d.setDate(gridStart.getDate()+i);
     const ds = fmtDate(d);
-    const c = countByDate[ds] || 0;
+    const totalSec = durationByDate[ds] || 0;
     const cell = document.createElement('div');
     cell.className = 'heat-cell';
-    if(c>=2) cell.style.background = 'var(--accent)';
-    else if(c===1) cell.style.background = 'var(--accent-dim)';
+    const tierColor = heatTier(totalSec);
+    if(tierColor) cell.style.background = tierColor;
     cell.addEventListener('click', ()=>{
       grid.querySelectorAll('.heat-cell.selected').forEach(el=>el.classList.remove('selected'));
       cell.classList.add('selected');
       const dateLbl = d.toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'});
-      if(c === 0){
+      if(totalSec === 0){
         heatInfo.textContent = `${dateLbl} — no session logged`;
       } else {
         const dayTitles = sessionsByDate[ds].map(s=>{
           const dayDef = DAYS.find(dd=>dd.key===s.dayKey);
           return dayDef ? dayDef.label : s.dayKey;
         }).join(', ');
-        heatInfo.textContent = `${dateLbl} — ${c} session${c>1?'s':''} (${dayTitles})`;
+        heatInfo.textContent = `${dateLbl} — ${formatClock(totalSec)} (${dayTitles})`;
       }
     });
     grid.appendChild(cell);
