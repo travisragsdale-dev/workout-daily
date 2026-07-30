@@ -345,8 +345,8 @@
   .kpi .lbl{ font-family:var(--mono); font-size:9px; letter-spacing:1px; color:var(--text-faint); text-transform:uppercase; margin-top:4px; }
 
   .heat-wrap{ padding: 10px 20px 6px; }
-  .heat-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:5px; }
-  .heat-cell{ aspect-ratio:1; border-radius:4px; background:var(--surface-2); border:1.5px solid transparent; }
+  .heat-grid{ display:grid; grid-template-columns: repeat(14, 1fr); gap:4px; }
+  .heat-cell{ aspect-ratio:1; border-radius:3px; background:var(--surface-2); border:1.5px solid transparent; }
   .heat-cell.selected{ border-color:var(--text); }
   .heat-legend{ display:flex; justify-content:flex-end; align-items:center; gap:4px; margin-top:8px; font-family:var(--mono); font-size:9px; color:var(--text-faint); }
   .heat-legend .sw{ width:9px; height:9px; border-radius:2px; }
@@ -561,8 +561,8 @@
       <div class="week-bars" id="weekBars"></div>
     </div>
 
-    <div class="section-label">Last 6 weeks</div>
-    <p class="section-sub">Each row is one week (Mon–Sun), oldest on top. Brighter green means a longer workout that day — tap a square for details.</p>
+    <div class="section-label">Last 14 weeks</div>
+    <p class="section-sub">Each square is one day, oldest to newest, left to right. Brighter green means a longer workout that day — tap a square for details.</p>
     <div class="heat-wrap">
       <div class="heat-grid" id="heatGrid"></div>
       <div class="heat-legend"><span>shorter</span><span class="sw" style="background:var(--surface-2)"></span><span class="sw" style="background:var(--heat-1)"></span><span class="sw" style="background:var(--heat-2)"></span><span class="sw" style="background:var(--heat-3)"></span><span class="sw" style="background:var(--heat-4)"></span><span>longer</span></div>
@@ -704,7 +704,7 @@ const ICON_IMAGES = {"arnoldpress": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
 // serving a stale cached copy from the home screen icon. Your data lives
 // in this origin's storage regardless, so this never touches it.
 // ============================================================
-const APP_BUILD = '2026-07-29T22:30';
+const APP_BUILD = '2026-07-30T15:05';
 (function checkForUpdate(){
   fetch('version.json?t=' + Date.now(), {cache: 'no-store'})
     .then(res => res.ok ? res.json() : null)
@@ -1762,17 +1762,14 @@ function renderStats(){
 
   renderWeekBars();
 
-  // heatmap: last 6 weeks, Monday-start calendar grid, colored by workout duration
+  // heatmap: last 14 weeks (98-day rolling window), colored by workout duration
   const grid = document.getElementById('heatGrid');
   grid.innerHTML = '';
   const heatInfo = document.getElementById('heatInfo');
   heatInfo.textContent = 'Tap a square to see the date';
 
-  const nowH = new Date();
-  const dowH = nowH.getDay(); // 0 Sun..6 Sat
-  const mondayOffsetH = dowH===0 ? -6 : 1-dowH;
-  const thisMondayH = new Date(nowH); thisMondayH.setDate(nowH.getDate()+mondayOffsetH); thisMondayH.setHours(0,0,0,0);
-  const gridStart = new Date(thisMondayH); gridStart.setDate(thisMondayH.getDate() - 5*7); // 5 weeks back + current = 6 rows
+  const daysBack = 14*7 - 1;
+  const gridStart = new Date(); gridStart.setDate(gridStart.getDate()-daysBack); gridStart.setHours(0,0,0,0);
 
   const durationByDate = {};
   const sessionsByDate = {};
@@ -1790,7 +1787,7 @@ function renderStats(){
     return 'var(--heat-4)';
   }
 
-  for(let i=0; i<42; i++){
+  for(let i=0; i<=daysBack; i++){
     const d = new Date(gridStart); d.setDate(gridStart.getDate()+i);
     const ds = fmtDate(d);
     const totalSec = durationByDate[ds] || 0;
